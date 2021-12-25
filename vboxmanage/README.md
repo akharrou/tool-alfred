@@ -1,1 +1,6 @@
 # vboxmanage
+
+## Dependencies
+
+- `virtualbox`
+- `jq`
