@@ -1,0 +1,2 @@
+*.png filter=lfs diff=lfs merge=lfs -text
+*.alfredworkflow filter=lfs diff=lfs merge=lfs -text
