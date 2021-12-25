@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>com.alfredapp.vboxmanage</string>
+	<key>category</key>
+	<string>Tools</string>
+	<key>connections</key>
+	<dict>
+		<key>753F9249-4CE3-4AC5-94C0-E6783BA68BF0</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>EF93DD54-080B-49ED-A3E0-0BCE568D9483</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
+				<string>1DB41FDC-B93D-4BEF-A534-5BD563A6CE98</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>EF93DD54-080B-49ED-A3E0-0BCE568D9483</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>10296EAE-3F66-43BE-860B-B69B48A82F50</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>akharrou</string>
+	<key>description</key>
+	<string>Manage VirtualBox VMs</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>vboxmanage</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>lastpathcomponent</key>
+				<false/>
+				<key>onlyshowifquerypopulated</key>
+				<false/>
+				<key>removeextension</key>
+				<false/>
+				<key>text</key>
+				<string></string>
+				<key>title</key>
+				<string></string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.notification</string>
+			<key>uid</key>
+			<string>10296EAE-3F66-43BE-860B-B69B48A82F50</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string># power-on/off the selected virtualbox machine
+if [[ $vmaction = power-on ]];
+then
+	eval /usr/local/bin/vboxmanage startvm "$vmuuid" --type "$vmactiontype" &amp;&gt;/dev/null
+else
+	eval /usr/local/bin/vboxmanage controlvm "$vmuuid" "$vmactiontype" &amp;&gt;/dev/null
+fi
+
+# check return status
+if [[ $? = 0 ]];
+then
+    printf "Successful $vmaction of VirtualBox \"$vmname\"\n"
+else
+    printf "Unsuccessful $vmaction of VirtualBox \"$vmname\"\n"
+fi</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>EF93DD54-080B-49ED-A3E0-0BCE568D9483</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<true/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>vb</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Searching VMs...</string>
+				<key>script</key>
+				<string>cat \
+  &lt;(
+    /usr/local/bin/vboxmanage list --sorted runningvms | tr -d '{}' | awk '{ print "{ \"name\": "$1", \"uuid\": \""$2"\" }" }' \
+    | /usr/local/bin/jq '{
+      title: .name,
+      subtitle: "Power-off VM (Save State)",
+      arg: .uuid,
+      icon: { path: "toggle-button-on.png" },
+      variables: { vmname: .name, vmuuid: .uuid, vmaction: "power-off", vmactiontype: "savestate", },
+      text: { copy: "vboxmanage controlvm \(.uuid) savestate" },
+      mods: {
+        cmd: {
+          title: .name,
+          subtitle: "Power-off VM (ACPI Button)",
+          arg: .uuid,
+          icon: { path: "toggle-button-on.png" },
+          variables: { vmname: .name, vmuuid: .uuid, vmaction: "power-off", vmactiontype: "acpipowerbutton", },
+          text: { copy: "vboxmanage controlvm \(.uuid) acpipowerbutton" },
+        },
+        alt: {
+          title: .name,
+          subtitle: "Power-off VM (Unsaved State)",
+          arg: .uuid,
+          icon: { path: "toggle-button-on.png" },
+          variables: { vmname: .name, vmuuid: .uuid, vmaction: "power-off", vmactiontype: "poweroff", },
+          text: { copy: "vboxmanage controlvm \(.uuid) poweroff" },
+        },
+      }
+    }'
+  ) \
+  &lt;(
+    /usr/local/bin/vboxmanage list --sorted vms | tr -d '{}' | awk '{ print "{ \"name\": "$1", \"uuid\": \""$2"\" }" }' \
+    | /usr/local/bin/jq '{
+      title: .name,
+      subtitle: "Power-on VM (GUI)",
+      arg: .uuid,
+      icon: { path: "toggle-button-off.png" },
+      variables: { vmname: .name, vmuuid: .uuid, vmaction: "power-on", vmactiontype: "gui", },
+      text: { copy: "vboxmanage startvm \(.uuid) --type gui" },
+      mods: {
+        cmd: {
+          title: .name,
+          subtitle: "Power-on VM (Headless)",
+          arg: .uuid,
+          icon: { path: "toggle-button-off.png" },
+          variables: { vmname: .name, vmuuid: .uuid, vmaction: "power-on", vmactiontype: "headless", },
+          text: { copy: "vboxmanage startvm \(.uuid) --type headless" },
+        },
+      }
+    }'
+  ) \
+| /usr/local/bin/jq --slurp '{ items: unique_by(.arg) }'</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string></string>
+				<key>title</key>
+				<string>Manage VirtualBox VMs</string>
+				<key>type</key>
+				<integer>0</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>753F9249-4CE3-4AC5-94C0-E6783BA68BF0</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argument</key>
+				<string>'{query}', {allvars}</string>
+				<key>cleardebuggertext</key>
+				<true/>
+				<key>processoutputs</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.utility.debug</string>
+			<key>uid</key>
+			<string>1DB41FDC-B93D-4BEF-A534-5BD563A6CE98</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string>Helps in managing VirtualBox machines.</string>
+	<key>uidata</key>
+	<dict>
+		<key>10296EAE-3F66-43BE-860B-B69B48A82F50</key>
+		<dict>
+			<key>xpos</key>
+			<integer>415</integer>
+			<key>ypos</key>
+			<integer>55</integer>
+		</dict>
+		<key>1DB41FDC-B93D-4BEF-A534-5BD563A6CE98</key>
+		<dict>
+			<key>xpos</key>
+			<integer>145</integer>
+			<key>ypos</key>
+			<integer>160</integer>
+		</dict>
+		<key>753F9249-4CE3-4AC5-94C0-E6783BA68BF0</key>
+		<dict>
+			<key>xpos</key>
+			<integer>65</integer>
+			<key>ypos</key>
+			<integer>55</integer>
+		</dict>
+		<key>EF93DD54-080B-49ED-A3E0-0BCE568D9483</key>
+		<dict>
+			<key>xpos</key>
+			<integer>240</integer>
+			<key>ypos</key>
+			<integer>55</integer>
+		</dict>
+	</dict>
+	<key>variablesdontexport</key>
+	<array/>
+	<key>version</key>
+	<string>0.0.1</string>
+	<key>webaddress</key>
+	<string></string>
+</dict>
+</plist>
